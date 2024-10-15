@@ -18,9 +18,8 @@ def index(request):
 def add(request):
     if request.method == "POST":
         form = NewTaskForm(request.POST) #request.POST contains data that the user submits
-        if form.is_valid():
-            task = form.cleaned_data["task"]
-            request.session["tasks"] += [task]
+        if form.is_valid():  # Check if form data is valid (server-side)
+            task = form.cleaned_data["task"]  # Isolate the task from the 'cleaned' version of form data
             task.append(task)
             return HttpResponseRedirect(reverse("tasks:index"))
         else:
