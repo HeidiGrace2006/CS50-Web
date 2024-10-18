@@ -7,16 +7,9 @@
 {% block body %}
     <h1>Edit the page: '{{ title }}'</h1>
 
-    <form method="POST" action="{% url 'edit' %}">
+    <form action="{% url 'save_edit' %}" method="POST">
         {% csrf_token %}
-        
-        <label for="title">Title:</label><br>
-        <input type="text" id="title" name="title" required><br>
-
-        <label for="content">Content of Page:</label><br>
-        <textarea id="content" name="content" required>util.get_entry()</textarea><br>
-
-        <input type="submit" value="Publish">
+        {{ form.as_p }}
+        <input type="submit" value="Publish" class="btn btn-primary">
     </form>
-
 {% endblock %}
