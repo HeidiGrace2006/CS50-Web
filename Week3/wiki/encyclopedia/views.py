@@ -42,36 +42,30 @@ def create(request):
             util.save_entry(title, content)
             return redirect(reverse("entry", kwargs={"entry": title}))
     return render(request, "encyclopedia/create.html")
-
+ 
 class EditForm(forms.Form):
     title = forms.CharField(label="Title")
     content = forms.CharField(
         label='Content',
         widget=forms.Textarea(attrs={'rows': 10, 'cols': 40})
     )
-        
-def edit(request):
-    title = request.GET.get("title")  
-    content = util.get_entry(title)
-    
-    if content is None:
-        return render(request, "encyclopedia/error.html", {
-            "message": f"No entry found for '{title}'."
-        })
-    
-    if request.method == "POST":
-        form = EditForm(request.POST)
-        if form.is_valid():
-            title = form.cleaned_data['title']
-            content = form.cleaned_data['content']
-            util.save_entry(title, content)
-            return redirect(reverse("entry", kwargs={"entry": title}))
-    else:
-        form = EditForm(initial={'title': title, 'content': content})
 
-    return render(request, "encyclopedia/edit.html", {
-        "form": form
-    })
+def edit(request):
+    if request.method == "POST":
+        title = request.POST['entry_title']
+        content = util.get_entry(title)
+        form = EditForm(initial={
+            "title": title,
+            "content": content
+        })
+
+        return render(request, "encyclopedia/edit.html", {
+            "title": title,
+            "form" : form,
+        })
+
+def save_edit(request):
+    return
 
 def entry(request, entry):
     entry_content = util.get_entry(entry)
