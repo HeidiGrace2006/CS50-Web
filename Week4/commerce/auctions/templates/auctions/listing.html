@@ -1,0 +1,61 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h1>Listing: {{ listing.title }}</h1>
+    <h4>Listed by: '{{ listing.user }}'</h4>
+    {% if listing.is_closed %}
+        <h3> <span style="background-color: tomato;">This listing has been closed.</span></h3>
+    {% endif %}
+    <ul style="list-style: none;">
+        {% if user.is_authenticated %}
+            {% if listing.user == reuqest.user %}
+                <li>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <button type="submit" name="close_listing" style="background-color: tomato;">Close Listing</button>
+                    </form>
+                </li>
+            {% endif %}
+            <li>
+                <form action="{% url 'toggle_watchlist' listing.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    {% if on_watchlist %}
+                        <h3> <span style="background-color: powderblue;">On Watchlist</span></h3>
+                        <button type="submit">Remove from Watchlist</button>
+                    {% else %}
+                        <button type="submit">Add to Watchlist</button>
+                    {% endif %}
+                </form>
+            </li><br>
+        {% endif %}
+
+        {% if listing.image_url %}
+            <li><img src="{{ listing.image_url }}" 
+                style="width: auto; height: 500px; text-align: center;">
+            </li>
+        {% endif %}
+        <li>{{ listing.description }}</li><br>
+        <li><h2><b>${{ listing.current_price|floatformat:2  }}</b></h2>
+            <p>{{ listing.bids.count }} bid(s) so far.</p>
+        {% if highest_bidder %}
+            <p>Your bid is the current bid.</p>
+        {% endif %}
+        </li>
+
+    {% if user.is_authenticated %}
+        <li>
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                ${{ form.bid }}
+                <input type="submit" value="Place Bid">
+            </form>
+            {% if form.errors %}
+                <div style="color: red;">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+        </li>
+    {% endif %}
+    </ul>
+{% endblock %}
+

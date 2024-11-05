@@ -1,22 +1,24 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h1>Active Listings</h1>
+    <h1>Watchlist</h1>
     <ul style="list-style: none;">
-        {% for listing in listings %}
+        {% for listing in watchlist %}
             <li style="display: flex; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
                 {% if listing.image_url %}
                     <img src="{{ listing.image_url }}" 
                         style="width: 300px; height: 300px; object-fit: contain; margin-right: 80px;">
                 {% endif %}
                 <div>
-                    <a href="{% url 'listing' listing.id %}" style="font-size: 1.25em; text-decoration: none;">
+                    <a href="{% url 'listing' listing.id %}" style="font-size: 1.25em; text-decoration: none; color: #333;">
                         <b>{{ listing.title }}</b>
                     </a><br>
                     <b>Price: </b>${{ listing.current_price|floatformat:2  }}<br><br>
                     {{ listing.description }}
                 </div>
             </li>
+        {% empty %}
+            <li>No items in your watchlist.</li>
         {% endfor %}
     </ul>
 {% endblock %}
