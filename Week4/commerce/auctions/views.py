@@ -85,7 +85,10 @@ def create(request):
     if request.method == "POST":
         form = CreateListing(request.POST)
         if form.is_valid():
-            form.save()
+            listing = form.save(commit=False)
+            listing.user = request.user
+            listing.save()
+            return redirect('listing', listing_id=listing.id)
     form = CreateListing()
     return render(request, "auctions/create.html", {
         "form": form
@@ -130,19 +133,31 @@ class BidForm(forms.Form):
         elif bid < self.starting_price:
             raise forms.ValidationError("Bid must be at least the starting bid.")
 
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        labels = {'content': ''}
+        widgets = {
+            'content': forms.Textarea(attrs={'placeholder': 'Add a comment...', 'rows': 3}),
+        }
+
 def listing(request, listing_id):
     listing = Listing.objects.get(id=listing_id)
     on_watchlist = listing in request.user.watchlist.all()
 
     # Get the user's last bid for this listing
     users_bid = listing.bids.filter(user=request.user).order_by('-id').first()
+    highest_bid = listing.bids.order_by('-amount').first()
     highest_bidder = users_bid and users_bid.amount == listing.current_price
 
     form = BidForm(request.POST or None, current_price=listing.current_price, starting_price=listing.starting_price)
+    comment_form = CommentForm(request.POST or None)
 
     if request.method == "POST":
         if 'close_listing' in request.POST:
             listing.is_closed = True
+            listing.winner = highest_bid.user
             listing.save()
         elif form.is_valid():
             bid_amount = form.cleaned_data["bid"]
@@ -153,23 +168,21 @@ def listing(request, listing_id):
             listing.save()
 
             return redirect('listing', listing_id=listing_id)
+        elif comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.user = request.user
+            comment.listing = listing
+            comment.save()
+            return redirect('listing', listing_id=listing_id)
         
     return render(request, "auctions/listing.html", {
         "listing": listing,
         "on_watchlist": on_watchlist,
         "form": form,
+        "comment_form": comment_form,
         "highest_bidder": highest_bidder,
+        "comments": listing.comments.order_by('-timestamp'),
     })
-
-def bid(request):
-    if request.method == "POST":
-        listing = Listing.objects.get(pk=listing.id) #listing.id?
-        user_id = int(request.POST["user"])
-        user = User.objects.get(pk=user_id)
-
-        # tie bid to user
-
-        return render(request, "auctions/listing.html")
     
 def categories(request):
     return render(request, "auctions/categories.html", {

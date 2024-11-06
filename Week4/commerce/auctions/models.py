@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 from django.db import models
 
 class Category(models.Model):
@@ -16,13 +17,14 @@ class Listing(models.Model):
     image_url = models.CharField(max_length=64, blank=True, null=True)
     user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="listings")
     is_closed = models.BooleanField(default=False)
+    winner = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="listings_won")
 
     def __str__(self):
         return f"{self.title} for ${self.current_price}"
     
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.current_price = self.starting_bid
+            self.current_price = self.starting_price
         super().save(*args, **kwargs)
     
 class Bid(models.Model):
@@ -35,14 +37,15 @@ class Bid(models.Model):
         return f"${self.amount} by {self.user.username} on {self.listing.title}"
     
 class Comment(models.Model):
-    user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="commenter")
-    comment = models.CharField(max_length=255)
+    user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField(max_length=500)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments")
+    timestamp = models.DateTimeField(auto_now_add=True)  
 
     def __str__(self):
-        return f"{self.user} {self.comment}"
+        return f"Comment by {self.user.username} on {self.listing.title}"
 
 class User(AbstractUser):
-    comments = models.ManyToManyField(Comment, blank=True, related_name="comments")
     watchlist = models.ManyToManyField(Listing, blank=True, related_name='watchers')
     
     def __str__(self):

@@ -2,19 +2,22 @@
 
 {% block body %}
     <h1>Listing: {{ listing.title }}</h1>
-    <h4>Listed by: '{{ listing.user }}'</h4>
+    <h4>Listed by: '{{ listing.user }}'</h4><hr>
     {% if listing.is_closed %}
-        <h3> <span style="background-color: tomato;">This listing has been closed.</span></h3>
+        <h4> <span style="background-color: tomato;">This listing has been closed.</span></h4>
+        {% if listing.winner == request.user %}
+            <h4> <span style="background-color: MediumSeaGreen;">You have won the bid</span></h4>
+        {% endif %}
     {% endif %}
     <ul style="list-style: none;">
         {% if user.is_authenticated %}
-            {% if listing.user == reuqest.user %}
+            {% if listing.user == request.user and listing.is_closed == False %}
                 <li>
                     <form action="" method="post">
                         {% csrf_token %}
                         <button type="submit" name="close_listing" style="background-color: tomato;">Close Listing</button>
                     </form>
-                </li>
+                </li><br>
             {% endif %}
             <li>
                 <form action="{% url 'toggle_watchlist' listing.id %}" method="post" style="display: inline;">
@@ -42,7 +45,7 @@
         {% endif %}
         </li>
 
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and listing.is_closed == False %}
         <li>
             <form action="{% url 'listing' listing.id %}" method="post">
                 {% csrf_token %}
@@ -56,6 +59,28 @@
             {% endif %}
         </li>
     {% endif %}
-    </ul>
+    </ul><hr>
+    
+    <h2>Comments</h2>
+    {% if request.user.is_authenticated %}
+        <form method="POST">
+            {% csrf_token %}
+            {{ comment_form }}
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+        </form>
+    {% else %}
+        <p><a href="{% url 'login' %}">Log in</a> to post a comment.</p>
+    {% endif %}<br>
+    <div class="comments">
+        {% for comment in comments %}
+            <div class="comment">
+                <strong>{{ comment.user.username }}</strong>
+                <p style="width: 25%; word-wrap: break-word;">{{ comment.content }}</p>
+                <small>{{ comment.timestamp }}</small>
+            </div><br>
+        {% empty %}
+            <p>No comments yet.</p>
+        {% endfor %}
+    </div>
 {% endblock %}
 
